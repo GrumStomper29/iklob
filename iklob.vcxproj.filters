@@ -13,10 +13,65 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="Source Files\Renderer">
+      <UniqueIdentifier>{21ea558a-06dc-4fc1-a7a8-b9ad0335cfdd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Third Party">
+      <UniqueIdentifier>{b717dae1-3408-4a16-a36a-20900cccecc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shaders">
+      <UniqueIdentifier>{cf6f61e4-a6b1-414d-9b86-80501a904661}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Input">
+      <UniqueIdentifier>{79de58fd-5c4c-43e4-9892-386e096dce38}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\renderer.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\glad\glad.c">
+      <Filter>Source Files\Third Party</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\gl_utils.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\pipeline.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\model_loader.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\input\input.cpp">
+      <Filter>Source Files\Input</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\renderer\renderer.hpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\gl_utils.hpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\pipeline.hpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\model_loader.hpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\input\input.hpp">
+      <Filter>Source Files\Input</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\shaders\uber.frag">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="src\shaders\uber.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
