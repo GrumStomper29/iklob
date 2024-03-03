@@ -1,6 +1,7 @@
 #include "renderer/renderer.hpp"
-
 #include "input/input.hpp"
+#include "physics/camera.hpp"
+#include "physics/collision_detection.hpp"
 
 #include "glm/glm.hpp"
 #define SDL_MAIN_HANDLED
@@ -27,24 +28,20 @@ int main()
 	renderer.init();
 	renderer.setViewport(window);
 
-	std::string modelPaths[1]
+	std::string modelPaths[2]
 	{
-		"assets/Deccer_Cubes.glb"
+		"assets/test_level.glb",
+		"assets/zombie1.glb",
 	};
-	renderer.loadScene(1, modelPaths);
+	renderer.loadScene(2, modelPaths);
 
-	glm::vec3 cameraPosition{ 0.0f, 0.0f, 10.0f };
-	float cameraYaw{ -90.0f };
-	float cameraPitch{ 0.0f };
-
-	glm::vec3 cameraFront{
-		std::cos(glm::radians(cameraYaw))* std::cos(glm::radians(cameraPitch)),
-		std::sin(glm::radians(cameraPitch)),
-		std::sin(glm::radians(cameraYaw))* std::cos(glm::radians(cameraPitch)) };
-
-	constexpr float cameraLookSpeed{ 10.0f };
-	constexpr float cameraMoveSpeed{ 10.0f };
-
+	Camera camera
+	{
+		.position{ 0.0f, 10.0f, 10.0f },
+		.moveSpeed{ 2.5f }
+	};
+	calculateCameraFrontVector(camera);
+	
 	bool quit{ false };
 
 	double accumulator{ 0.0 };
@@ -61,6 +58,23 @@ int main()
 
 		while (accumulator > deltaTime)
 		{
+			for (auto& mesh : renderer.m_meshes)
+			{
+				for (auto& primitive : mesh.primitives)
+				{
+					calculatePrimitiveBounds(renderer, primitive);
+				}
+			}
+
+			for (auto& mesh : renderer.m_meshes)
+			{
+				mesh.time += accumulator;
+				if (mesh.time > mesh.maxTime)
+				{
+					mesh.time = 0.0;
+				}
+			}
+
 			SDL_SetRelativeMouseMode(SDL_TRUE);
 
 			SDL_Event e{};
@@ -72,8 +86,17 @@ int main()
 				}
 				else if (e.type == SDL_MOUSEMOTION)
 				{
-					cameraYaw += e.motion.xrel * deltaTime * cameraLookSpeed;
-					cameraPitch -= e.motion.yrel * deltaTime * cameraLookSpeed;
+					camera.yaw += e.motion.xrel * static_cast<float>(deltaTime) * camera.lookSpeed;
+					camera.pitch -= e.motion.yrel * static_cast<float>(deltaTime) * camera.lookSpeed;
+
+					if (camera.pitch > 89.0f)
+					{
+						camera.pitch = 89.0f;
+					}
+					else if (camera.pitch < -89.0f)
+					{
+						camera.pitch = -89.0f;
+					}
 				}
 				else
 				{
@@ -81,18 +104,7 @@ int main()
 				}
 			}
 
-			cameraFront = {
-				std::cos(glm::radians(cameraYaw))* std::cos(glm::radians(cameraPitch)),
-				std::sin(glm::radians(cameraPitch)),
-				std::sin(glm::radians(cameraYaw))* std::cos(glm::radians(cameraPitch)) };
-
-			glm::vec3 cameraRight{ glm::normalize(glm::cross(glm::vec3{ 0.0f, 1.0f, 0.0f }, cameraFront)) };
-
-			float cameraRightVel{ input.getKeyDown(Input::D) ? cameraMoveSpeed * static_cast<float>(deltaTime) : (input.getKeyDown(Input::A) ? -cameraMoveSpeed * static_cast<float>(deltaTime) : 0.0f) };
-			float cameraForwardVel{ input.getKeyDown(Input::W) ? -cameraMoveSpeed * static_cast<float>(deltaTime) : (input.getKeyDown(Input::S) ? cameraMoveSpeed * static_cast<float>(deltaTime) : 0.0f) };
-
-			cameraPosition -= cameraFront * cameraForwardVel;
-			cameraPosition -= cameraRight * cameraRightVel;
+			updateCamera(camera, input, renderer, static_cast<float>(deltaTime));
 
 			accumulator -= deltaTime;
 			drawn = false;
@@ -100,12 +112,13 @@ int main()
 
 		if (drawn)
 		{
-			// Interpolate
+			// Interpolate physics
+			// Todo: what goes here
 		}
 		else
 		{
 			renderer.setViewport(window);
-			renderer.render(cameraPosition, cameraFront,
+			renderer.render(camera.position, camera.forwardVector,
 				90.0f, 16.0f / 9.0f, 0.1f, 500.0f);
 			SDL_GL_SwapWindow(window);
 

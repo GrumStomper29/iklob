@@ -20,11 +20,14 @@ void Input::update(const SDL_Event& e)
 		case SDLK_w:
 			keyStates[W] = (e.type == SDL_KEYDOWN);
 			break;
+		case SDLK_SPACE:
+			keyStates[SPACE] = (e.type == SDL_KEYDOWN);
+			break;
 		}
 	}
 }
 
-bool Input::getKeyDown(KeyCode key)
+bool Input::getKeyDown(KeyCode key) const
 {
 	return keyStates[key];
 }

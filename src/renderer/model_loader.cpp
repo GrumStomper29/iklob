@@ -12,11 +12,33 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "tinygltf/tiny_gltf.h"
 
+#include <algorithm> // for std::find and std::max
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <iterator> // for std::distance
 #include <string>
+#include <utility> // for std::pair
+
+template <typename T>
+std::vector<T> loadBuffer(const tinygltf::Accessor& accessor, const tinygltf::BufferView& bufferView, const tinygltf::Buffer& buffer)
+{
+	std::vector<T> r(bufferView.byteLength / sizeof(T));
+
+	auto data{ buffer.data.data() + bufferView.byteOffset + accessor.byteOffset };
+	
+	for (int i{ 0 }; i < bufferView.byteLength / accessor.ByteStride(bufferView); ++i)
+	{
+		T t{};
+		std::memcpy(&t, data, sizeof(T));
+		data += sizeof(T);
+
+		r[i] = t;
+	}
+
+	return r;
+}
 
 Renderer::Material loadPrimitiveMaterial(const tinygltf::Model& model, const tinygltf::Primitive& primitive)
 {
@@ -37,10 +59,27 @@ Renderer::Material loadPrimitiveMaterial(const tinygltf::Model& model, const tin
 		{
 			const tinygltf::Texture& baseColorTexture{ model.textures[baseColorTextureInfo.index] };
 			const tinygltf::Image& baseColorTextureImage{ model.images[baseColorTexture.source] };
+			const tinygltf::Sampler& baseColorTextureSampler{ model.samplers[baseColorTexture.sampler] };
+
+			GLint minFilter{ [&]() { 
+				switch (baseColorTextureSampler.minFilter)
+				{
+				case TINYGLTF_TEXTURE_FILTER_NEAREST: return GL_NEAREST;
+				case TINYGLTF_TEXTURE_FILTER_LINEAR: return GL_LINEAR;
+				default: return GL_LINEAR_MIPMAP_LINEAR;
+				} }() };
+
+			GLint magFilter{ [&]() {
+				switch (baseColorTextureSampler.magFilter)
+				{
+				case TINYGLTF_TEXTURE_FILTER_NEAREST: return GL_NEAREST;
+				default: return GL_LINEAR;
+				} }() };
 
 			ret.hasBaseColorTexture = true;
 			ret.baseColorTexture = createTexture(baseColorTextureImage.image.data(),
-				baseColorTextureImage.width, baseColorTextureImage.height);
+				baseColorTextureImage.width, baseColorTextureImage.height,
+				minFilter, magFilter);
 		}
 	}
 
@@ -85,6 +124,154 @@ glm::mat4 getNodeTransform(const tinygltf::Node& node)
 	return translationMatrix * rotationMatrix * scaleMatrix;
 }
 
+void loadNodeSkin(const tinygltf::Model& model, const::tinygltf::Node& node, Renderer::Mesh& ret)
+{
+	const auto& skin{ model.skins[node.skin] };
+
+	std::vector<glm::mat4> inverseBindMatrices{};
+	if (skin.inverseBindMatrices != -1)
+	{
+		const auto& inverseBindMatricesAccessor{ model.accessors[skin.inverseBindMatrices] };
+		const auto& inverseBindMatricesBufView{ model.bufferViews[inverseBindMatricesAccessor.bufferView] };
+		const auto& inverseBindMatricesBuf{ model.buffers[inverseBindMatricesBufView.buffer] };
+
+		auto data{ inverseBindMatricesBuf.data.data() + inverseBindMatricesBufView.byteOffset };
+		const std::size_t count{ inverseBindMatricesBufView.byteLength / sizeof(glm::mat4) };
+
+		inverseBindMatrices = loadBuffer<glm::mat4>(inverseBindMatricesAccessor, inverseBindMatricesBufView, inverseBindMatricesBuf);
+	}
+	else
+	{
+		std::cerr << "MODEL LOADER: ERROR: Inverse bind matrices expected but not found\n";
+	}
+
+	// Create table of known child indices
+	// Check if table contains index of joint being loaded
+
+	// This is an array of all children indices. It exists
+	// so that a joint being loaded can check here if it is
+	// a child joint. There might be a more elegant way to do
+	// this but it's probably bikeshedding
+	std::vector<int> globalChildrenIndices{};
+
+	int i{ 0 };
+	for (const auto& jointIndex : skin.joints)
+	{
+		const auto& joint{ model.nodes[jointIndex] };
+
+		std::vector<int> children{ joint.children };
+		// Convert the children node (GLTF) indices into children joint (engine) indices
+		for (int& child : children)
+		{
+			auto childIt{ std::find(skin.joints.begin(), skin.joints.end(), child) };
+
+			if (childIt != skin.joints.end())
+			{
+				child = std::distance(skin.joints.begin(), childIt);
+
+				globalChildrenIndices.push_back(child);
+			}
+		}
+
+		ret.joints.push_back({
+			.name{ joint.name },
+			.nodeIndex{ jointIndex },
+			.hasJointParent{ std::find(globalChildrenIndices.begin(), globalChildrenIndices.end(),
+				i) != globalChildrenIndices.end() },
+			.children{ children },
+			.transform{ getNodeTransform(joint) },
+			.inverseBindMatrix{ inverseBindMatrices[i] },
+		});
+
+		++i;
+	}
+
+
+	if (model.animations.size() != 0)
+	{
+		for (const auto& channel : model.animations[0].channels)
+		{
+			int targetNode{ channel.target_node };
+
+			auto node{ std::find_if(ret.joints.begin(), ret.joints.end(),
+				[targetNode](const Renderer::Joint& i) {
+					return (i.nodeIndex == targetNode);
+				}) };
+
+			if (node != ret.joints.end())
+			{
+				Renderer::AnimationSampler animationSampler{};
+
+				if (channel.target_path == "translation")
+				{
+					animationSampler.path = Renderer::AnimationSampler::TRANSLATION;
+				}
+				else if (channel.target_path == "rotation")
+				{
+					animationSampler.path = Renderer::AnimationSampler::ROTATION;
+				}
+				else if (channel.target_path == "scale")
+				{
+					animationSampler.path = Renderer::AnimationSampler::SCALE;
+				}
+				else if (channel.target_path == "weights")
+				{
+					std::cerr << "MODEL LOADER: ERROR: Weights animation target detected but not supported\n";
+				}
+
+				const auto& inputAccessor{ model.accessors[model.animations[0].samplers[channel.sampler].input] };
+				const auto& inputBufferView{ model.bufferViews[inputAccessor.bufferView] };
+				const auto& inputBuffer{ model.buffers[inputBufferView.buffer] };
+
+				if (inputAccessor.maxValues[0] > ret.maxTime)
+				{
+					ret.maxTime = inputAccessor.maxValues[0];
+				}
+
+				auto inputData{ inputBuffer.data.data() + inputBufferView.byteOffset + inputAccessor.byteOffset };
+
+				for (int i{ 0 }; i < inputBufferView.byteLength / sizeof(float); ++i)
+				{
+					float inputValue{};
+					std::memcpy(&inputValue, inputData, sizeof(float));
+					inputData += sizeof(float);
+
+					animationSampler.input.push_back(inputValue);
+				}
+
+				const auto& outputAccessor{ model.accessors[model.animations[0].samplers[channel.sampler].output] };
+				const auto& outputBufferView{ model.bufferViews[outputAccessor.bufferView] };
+				const auto& outputBuffer{ model.buffers[outputBufferView.buffer] };
+
+				auto outputData{ outputBuffer.data.data() + outputBufferView.byteOffset + outputAccessor.byteOffset };
+
+				
+				if (outputAccessor.type == TINYGLTF_TYPE_VEC3)
+				{
+					for (int i{ 0 }; i < outputBufferView.byteLength / outputAccessor.ByteStride(outputBufferView); ++i)
+					{
+						glm::vec3 outputValue{ 0.0f };
+						std::memcpy(&outputValue, outputData, sizeof(glm::vec3));
+						outputData += sizeof(glm::vec3);
+
+						animationSampler.output.push_back(glm::vec4{ outputValue, 0.0f });
+					}
+				}
+				else if (outputAccessor.type == TINYGLTF_TYPE_VEC4)
+				{
+					animationSampler.output = loadBuffer<glm::vec4>(outputAccessor, outputBufferView, outputBuffer);
+				}
+
+				node->animationSamplers.insert(std::pair{ animationSampler.path, animationSampler });
+			}
+			else
+			{
+				std::cerr << "MODEL LOADER: ERROR: Target joint node not found for animation channel\n";
+			}
+		}
+	}
+}
+
 Renderer::Primitive loadPrimitive(const tinygltf::Model& model, const tinygltf::Primitive& primitive,
 	const glm::mat4& nodeTransform, std::vector<Renderer::Vertex>& vertices, std::vector<GLuint>& indices)
 {
@@ -124,7 +311,6 @@ Renderer::Primitive loadPrimitive(const tinygltf::Model& model, const tinygltf::
 			std::memcpy(&index, indexData, sizeof(std::uint32_t));
 			indexData += sizeof(std::uint32_t);
 
-			
 			indices.push_back(index + indexOffset);
 		}
 		break;
@@ -139,15 +325,17 @@ Renderer::Primitive loadPrimitive(const tinygltf::Model& model, const tinygltf::
 	const unsigned char* positionData { nullptr };
 	const unsigned char* normalData   { nullptr };
 	const unsigned char* texCoordData { nullptr };
+	const unsigned char* jointData    { nullptr };
+	const unsigned char* weightData   { nullptr };
 
 	std::size_t vertexCount{};
 
 	for (const auto& attribute : primitive.attributes)
 	{
-		const tinygltf::Accessor& accessor   { model.accessors[attribute.second] };
+		const tinygltf::Accessor& accessor     { model.accessors[attribute.second] };
 		const tinygltf::BufferView& bufferView { model.bufferViews[accessor.bufferView] };
-		const tinygltf::Buffer& buffer     { model.buffers[bufferView.buffer] };
-
+		const tinygltf::Buffer& buffer         { model.buffers[bufferView.buffer] };
+		
 		if (attribute.first == "POSITION")
 		{
 			vertexCount = bufferView.byteLength / sizeof(glm::vec3);
@@ -160,6 +348,14 @@ Renderer::Primitive loadPrimitive(const tinygltf::Model& model, const tinygltf::
 		else if (attribute.first == "TEXCOORD_0")
 		{
 			texCoordData = buffer.data.data() + bufferView.byteOffset;
+		}
+		else if (attribute.first == "JOINTS_0")
+		{
+			jointData = buffer.data.data() + bufferView.byteOffset;
+		}
+		else if (attribute.first == "WEIGHTS_0")
+		{
+			weightData = buffer.data.data() + bufferView.byteOffset;
 		}
 	}
 
@@ -183,7 +379,26 @@ Renderer::Primitive loadPrimitive(const tinygltf::Model& model, const tinygltf::
 			texCoordData += sizeof(glm::vec2);
 		}
 
-		vertices.push_back(Renderer::Vertex{ position, normal, texCoord });
+		// A joint of -1 denotes that there is no bone or weight to account for.
+		glm::ivec4 joints{ -1, -1, -1, -1 };
+		if (jointData)
+		{
+			glm::u8vec4 u8joints{};
+
+			std::memcpy(&u8joints, jointData, sizeof(glm::u8vec4));
+			jointData += sizeof(glm::u8vec4);
+
+			joints = u8joints;
+		}
+		
+		glm::vec4 weights{ 0.0f, 0.0f, 0.0f, 0.0f };
+		if (weightData)
+		{
+			std::memcpy(&weights, weightData, sizeof(glm::vec4));
+			weightData += sizeof(glm::vec4);
+		}
+
+		vertices.push_back(Renderer::Vertex{ position, normal, texCoord, joints, weights });
 	}
 
 	return ret;
@@ -195,7 +410,13 @@ void loadNode(const tinygltf::Model& model, const tinygltf::Node& node,
 {
 	// Todo: test if this works as intended
 	glm::mat4 transform{ inheritedTransform * getNodeTransform(node) };
-	//transform = inheritedTransform * transform;
+
+	// IMPORTANT: This is only prepared for models with one or fewer skins.
+	// Any more skins will result in UB
+	if (node.skin != -1)
+	{
+		loadNodeSkin(model, node, ret);
+	}
 
 	if (node.mesh != -1)
 	{

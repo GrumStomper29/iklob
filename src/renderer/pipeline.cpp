@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <utility>
+#include <vector>
 
 Pipeline::Pipeline(const std::string& vertexShaderPath, const std::string& fragmentShaderPath)
 {
@@ -68,6 +69,12 @@ void Pipeline::setUniformMat4(const std::string& name, const glm::mat4& value)
 {
 	GLint location{ glGetUniformLocation(m_program, name.c_str()) };
 	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+}
+
+void Pipeline::setUniformMat4Array(const std::string& name, const std::vector<glm::mat4>& matrices)
+{
+	GLint location{ glGetUniformLocation(m_program, name.c_str()) };
+	glUniformMatrix4fv(location, matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
 }
 
 

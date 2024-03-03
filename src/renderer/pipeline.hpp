@@ -4,6 +4,7 @@
 #include "glm/glm.hpp"
 
 #include <string>
+#include <vector>
 
 class Pipeline
 {
@@ -23,6 +24,7 @@ public:
 
 	void setUniformInt(const std::string& name, int value);
 	void setUniformMat4(const std::string& name, const glm::mat4& value);
+	void setUniformMat4Array(const std::string& name, const std::vector<glm::mat4>& matrices);
 
 private:
 	GLuint m_program{};

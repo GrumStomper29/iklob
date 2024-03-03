@@ -70,13 +70,13 @@ GLuint compileShader(const std::string& filename, GLenum type)
 	return shader;
 }
 
-GLuint createTexture(const void* pixels, GLsizei width, GLsizei height)
+GLuint createTexture(const void* pixels, GLsizei width, GLsizei height, GLint minFilter, GLint magFilter)
 {
 	GLuint texture{};
 	glCreateTextures(GL_TEXTURE_2D, 1, &texture);
 
-	glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, minFilter);
+	glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, magFilter);
 
 	glTextureStorage2D(texture, 1, GL_RGBA8, width, height);
 	glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);

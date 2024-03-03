@@ -12,14 +12,15 @@ public:
 		A,
 		D,
 		S,
-		W
+		W,
+		SPACE,
 	};
 
 	void update(const SDL_Event& e);
 
-	bool getKeyDown(KeyCode key);
+	bool getKeyDown(KeyCode key) const;
 
 private:
 
-	bool keyStates[4]{};
+	bool keyStates[5]{};
 };
