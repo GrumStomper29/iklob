@@ -7,10 +7,11 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/quaternion.hpp"
+#define SDL_MAIN_HANDLED
 #include "SDL.h"
 
 #include <exception>
-#include <string>
+#include <string> // Todo: consider using string_view for renderMesh() parameter
 #include <vector>
 
 
@@ -34,9 +35,9 @@ void Renderer::cleanup()
 {
 	m_uberPipeline = Pipeline{};
 
-	for (Mesh& mesh : m_meshes)
+	for (const auto& mesh : meshes)
 	{
-		for (Primitive& primitive : mesh.primitives)
+		for (const auto& primitive : mesh.second.primitives)
 		{
 			if (primitive.material.hasBaseColorTexture)
 			{
@@ -52,10 +53,9 @@ void Renderer::cleanup()
 
 
 
-void Renderer::render(const glm::vec3& cameraPosition, const glm::vec3& cameraLook,
-	float fieldOfView, float aspectRatio, float nearPlane, float farPlane)
+void Renderer::beginRendering(const glm::vec3& cameraPosition, const glm::vec3& cameraLook,
+	float fieldOfView, float aspectRatio, float nearPlane, float farPlane, const glm::vec3& lightColor)
 {
-	glm::mat4 model{ 1.0f };
 	glm::mat4 view{ glm::lookAt(cameraPosition, cameraPosition + cameraLook, glm::vec3{ 0.0f, 1.0f, 0.0f }) };
 	glm::mat4 projection{ glm::perspective(glm::radians(fieldOfView), aspectRatio, nearPlane, farPlane) };
 
@@ -70,28 +70,29 @@ void Renderer::render(const glm::vec3& cameraPosition, const glm::vec3& cameraLo
 	m_uberPipeline.setUniformMat4("projection", projection);
 	m_uberPipeline.setUniformMat4("view", view);
 
+	m_uberPipeline.setUniformVec3("lightColor", lightColor);
+
 	glBindVertexArray(m_vertexArray);
-	
-	// should be const
-	for (const Mesh& mesh : m_meshes)
+}
+
+void Renderer::renderMesh(const std::string& mesh, const glm::mat4& transform)
+{
+	if (meshes.at(mesh).joints.size() != 0)
 	{
-		if (mesh.joints.size() != 0)
-		{
-			auto jointMatrix{ calculateJointMatrix(mesh) };
-			jointMatrix.resize(32);
-			m_uberPipeline.setUniformMat4Array("jointMatrix", jointMatrix);
-		}
+		auto jointMatrix{ calculateJointMatrix(meshes.at(mesh)) };
+		jointMatrix.resize(32);
+		m_uberPipeline.setUniformMat4Array("jointMatrix", jointMatrix);
+	}
 
-		for (const Primitive& primitive : mesh.primitives)
-		{
-			m_uberPipeline.setUniformMat4("model", /*model * */ primitive.transform);
+	for (const Primitive& primitive : meshes.at(mesh).primitives)
+	{
+		m_uberPipeline.setUniformMat4("model", transform * primitive.transform);
 
-			glBindTextureUnit(0, primitive.material.baseColorTexture);
-			m_uberPipeline.setUniformInt("texture0", 0);
+		glBindTextureUnit(0, primitive.material.baseColorTexture);
+		m_uberPipeline.setUniformInt("texture0", 0);
 
-			glDrawElements(GL_TRIANGLES, primitive.elementCount, GL_UNSIGNED_INT,
-				reinterpret_cast<const void*>(sizeof(GLuint) * primitive.elementOffset));
-		}
+		glDrawElements(GL_TRIANGLES, primitive.elementCount, GL_UNSIGNED_INT,
+			reinterpret_cast<const void*>(sizeof(GLuint) * primitive.elementOffset));
 	}
 }
 
@@ -104,11 +105,11 @@ void Renderer::setViewport(SDL_Window* window)
 
 
 
-void Renderer::loadScene(int modelPathCount, const std::string* modelPaths)
+void Renderer::loadScene(int modelPathCount, std::pair<std::string, std::string>* modelPaths)
 {
 	for (int i{ 0 }; i < modelPathCount; ++i)
 	{
-		m_meshes.push_back(loadModel(modelPaths[i], m_sceneVertices, m_sceneIndices));
+		meshes[modelPaths[i].second] = loadModel(modelPaths[i].first, m_sceneVertices, m_sceneIndices);
 	}
 
 	glCreateBuffers(1, &m_vertexBuffer);

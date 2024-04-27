@@ -7,10 +7,12 @@ layout (location = 1) in vec2 inTex;
 
 uniform sampler2D texture0;
 
+uniform vec3 lightColor;
+
 void main()
 {
 	const vec3 lightDir = normalize(const vec3(-2.0f, 8.0f, -1.0f));
-	const vec3 lightCol = const vec3(1.0f, 1.0f, 0.71f);
+	const vec3 lightCol = const vec3(lightColor);
 
 	const float ambientStrength = 0.4f;
 	const vec3 ambient = ambientStrength * lightCol;
@@ -18,4 +20,6 @@ void main()
 	float diffuse = max(dot(normalize(inNorm), lightDir), 0.0f);
 
 	fragColor = vec4((diffuse * lightCol + ambient), 1.0f) * vec4(texture(texture0, inTex));
+
+	//fragColor = vec4(inTex / 10.0f, 0.0f, 1.0f);
 }

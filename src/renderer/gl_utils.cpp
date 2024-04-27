@@ -70,7 +70,7 @@ GLuint compileShader(const std::string& filename, GLenum type)
 	return shader;
 }
 
-GLuint createTexture(const void* pixels, GLsizei width, GLsizei height, GLint minFilter, GLint magFilter)
+GLuint createTexture(const void* pixels, GLsizei width, GLsizei height, GLint minFilter, GLint magFilter, int bits)
 {
 	GLuint texture{};
 	glCreateTextures(GL_TEXTURE_2D, 1, &texture);
@@ -78,8 +78,27 @@ GLuint createTexture(const void* pixels, GLsizei width, GLsizei height, GLint mi
 	glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, minFilter);
 	glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, magFilter);
 
-	glTextureStorage2D(texture, 1, GL_RGBA8, width, height);
-	glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	GLenum format { [=]()->GLenum {
+			switch (bits)
+			{
+			case 8:  return GL_RGBA8;
+			case 16: return GL_RGBA16;
+			default: return GL_RGBA8;
+			}
+		}() };
+
+	GLenum type{ [=]()->GLenum {
+			switch (bits)
+			{
+			case 8:  return GL_UNSIGNED_BYTE;
+			case 16: return GL_UNSIGNED_SHORT;
+			default: return GL_UNSIGNED_BYTE;
+			}
+		}() };
+
+	glTextureStorage2D(texture, 1, format, width, height);
+	glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGBA, type, pixels);
+	glGenerateTextureMipmap(texture);
 
 	return texture;
 }

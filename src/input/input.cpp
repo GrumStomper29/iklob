@@ -1,5 +1,6 @@
 #include "input.hpp"
 
+#define SDL_MAIN_HANDLED
 #include "SDL/SDL.h"
 
 void Input::update(const SDL_Event& e)

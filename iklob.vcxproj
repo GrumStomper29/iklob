@@ -65,34 +65,35 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)third_party/GeometricTools/GTE;$(ProjectDir)third_party/SDL;$(ProjectDir)third_party;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)third_party;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)third_party/GeometricTools/GTE;$(ProjectDir)third_party/PhysX/include;$(ProjectDir)third_party/SDL;$(ProjectDir)third_party;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)third_party/;$(ProjectDir)third_party/PhysX/lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)third_party/GeometricTools/GTE;$(ProjectDir)third_party/SDL;$(ProjectDir)third_party;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)third_party;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)third_party/GeometricTools/GTE;$(ProjectDir)third_party/PhysX/include;$(ProjectDir)third_party/SDL;$(ProjectDir)third_party;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)third_party/;$(ProjectDir)third_party/PhysX/lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)third_party/GeometricTools/GTE;$(ProjectDir)third_party/SDL;$(ProjectDir)third_party;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)third_party;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)third_party/GeometricTools/GTE;$(ProjectDir)third_party/PhysX/include;$(ProjectDir)third_party/SDL;$(ProjectDir)third_party;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)third_party/;$(ProjectDir)third_party/PhysX/lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)third_party/GeometricTools/GTE;$(ProjectDir)third_party/SDL;$(ProjectDir)third_party;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)third_party;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)third_party/GeometricTools/GTE;$(ProjectDir)third_party/PhysX/include;$(ProjectDir)third_party/SDL;$(ProjectDir)third_party;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)third_party/;$(ProjectDir)third_party/PhysX/lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>opengl32.lib;SDL/SDL2.lib;SDL/SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;SDL/SDL2.lib;SDL/SDL2main.lib;debug/PhysXCommon_64.lib;debug/PhysX_64.lib;debug/PhysXFoundation_64.lib;debug/PhysXCooking_64.lib;debug/PhysXExtensions_static_64.lib;debug/PhysXPvdSDK_static_64.lib;debug/PhysXCharacterKinematic_static_64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(ProjectDir)third_party\SDL\SDL2.dll" "$(OutDir)"</Command>
@@ -103,11 +104,12 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>opengl32.lib;SDL/SDL2.lib;SDL/SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;SDL/SDL2.lib;SDL/SDL2main.lib;debug/PhysXCommon_64.lib;debug/PhysX_64.lib;debug/PhysXFoundation_64.lib;debug/PhysXCooking_64.lib;debug/PhysXExtensions_static_64.lib;debug/PhysXPvdSDK_static_64.lib;debug/PhysXCharacterKinematic_static_64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(ProjectDir)third_party\SDL\SDL2.dll" "$(OutDir)"</Command>
@@ -118,13 +120,14 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;SDL/SDL2.lib;SDL/SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;SDL/SDL2.lib;SDL/SDL2main.lib;checked/PhysXCommon_64.lib;checked/PhysX_64.lib;checked/PhysXFoundation_64.lib;checked/PhysXCooking_64.lib;checked/PhysXExtensions_static_64.lib;checked/PhysXPvdSDK_static_64.lib;checked/PhysXCharacterKinematic_static_64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(ProjectDir)third_party\SDL\SDL2.dll" "$(OutDir)"</Command>
@@ -135,23 +138,24 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;SDL/SDL2.lib;SDL/SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;SDL/SDL2.lib;SDL/SDL2main.lib;checked/PhysXCommon_64.lib;checked/PhysX_64.lib;checked/PhysXFoundation_64.lib;checked/PhysXCooking_64.lib;checked/PhysXExtensions_static_64.lib;checked/PhysXPvdSDK_static_64.lib;checked/PhysXCharacterKinematic_static_64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(ProjectDir)third_party\SDL\SDL2.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\entity_system\camera.cpp" />
+    <ClCompile Include="src\entity_system\entity.cpp" />
     <ClCompile Include="src\input\input.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\physics\camera.cpp" />
-    <ClCompile Include="src\physics\collision_detection.cpp" />
     <ClCompile Include="src\renderer\gl_utils.cpp" />
     <ClCompile Include="src\renderer\model_loader.cpp" />
     <ClCompile Include="src\renderer\pipeline.cpp" />
@@ -159,9 +163,9 @@
     <ClCompile Include="third_party\glad\glad.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\entity_system\camera.hpp" />
+    <ClInclude Include="src\entity_system\entity.hpp" />
     <ClInclude Include="src\input\input.hpp" />
-    <ClInclude Include="src\physics\camera.hpp" />
-    <ClInclude Include="src\physics\collision_detection.hpp" />
     <ClInclude Include="src\renderer\gl_utils.hpp" />
     <ClInclude Include="src\renderer\model_loader.hpp" />
     <ClInclude Include="src\renderer\pipeline.hpp" />

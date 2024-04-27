@@ -9,6 +9,7 @@
 
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class Renderer
@@ -39,9 +40,6 @@ public:
 
 		GLsizei elementOffset{};
 		GLsizei elementCount{};
-
-		glm::vec3 minBound{};
-		glm::vec3 maxBound{};
 	};
 
 	struct AnimationSampler
@@ -84,12 +82,14 @@ public:
 	void init();
 	void cleanup();
 
-	void render(const glm::vec3& cameraPosition, const glm::vec3& cameraLook,
-		float fieldOfView, float aspectRatio, float nearPlane, float farPlane);
+	void beginRendering(const glm::vec3& cameraPosition, const glm::vec3& cameraLook,
+		float fieldOfView, float aspectRatio, float nearPlane, float farPlane, const glm::vec3& lightColor);
+
+	void renderMesh(const std::string& mesh, const glm::mat4& transform);
 
 	void setViewport(SDL_Window* window);
 
-	void loadScene(int modelPathCount, const std::string* modelPaths);
+	void loadScene(int modelPathCount, std::pair<std::string, std::string>* modelPaths);
 
 	const std::vector<Vertex>& sceneVertices() const
 	{
@@ -100,8 +100,7 @@ public:
 		return m_sceneIndices;
 	}
 
-	// Todo: find a solution to this being private or public. Consider using an unordered_map
-	std::vector<Mesh> m_meshes{};
+	std::unordered_map<std::string, Mesh> meshes{};
 
 private:
 

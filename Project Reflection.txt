@@ -1,2 +1,0 @@
-Some things I've learned so far:
-—Using only object composition for object relationships is niave

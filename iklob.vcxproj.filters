@@ -25,8 +25,8 @@
     <Filter Include="Source Files\Input">
       <UniqueIdentifier>{79de58fd-5c4c-43e4-9892-386e096dce38}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Physics">
-      <UniqueIdentifier>{5fcc88ca-26ca-44db-85b3-3f04286d49a8}</UniqueIdentifier>
+    <Filter Include="Source Files\Entity_System">
+      <UniqueIdentifier>{e0de14c9-5ccd-4a28-9893-e94204848eef}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -51,11 +51,11 @@
     <ClCompile Include="src\input\input.cpp">
       <Filter>Source Files\Input</Filter>
     </ClCompile>
-    <ClCompile Include="src\physics\collision_detection.cpp">
-      <Filter>Source Files\Physics</Filter>
+    <ClCompile Include="src\entity_system\entity.cpp">
+      <Filter>Source Files\Entity_System</Filter>
     </ClCompile>
-    <ClCompile Include="src\physics\camera.cpp">
-      <Filter>Source Files\Physics</Filter>
+    <ClCompile Include="src\entity_system\camera.cpp">
+      <Filter>Source Files\Entity_System</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -74,11 +74,11 @@
     <ClInclude Include="src\input\input.hpp">
       <Filter>Source Files\Input</Filter>
     </ClInclude>
-    <ClInclude Include="src\physics\collision_detection.hpp">
-      <Filter>Source Files\Physics</Filter>
+    <ClInclude Include="src\entity_system\entity.hpp">
+      <Filter>Source Files\Entity_System</Filter>
     </ClInclude>
-    <ClInclude Include="src\physics\camera.hpp">
-      <Filter>Source Files\Physics</Filter>
+    <ClInclude Include="src\entity_system\camera.hpp">
+      <Filter>Source Files\Entity_System</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-class Pipeline
+class Pipeline final
 {
 public:
 	Pipeline() = default;
@@ -25,6 +25,7 @@ public:
 	void setUniformInt(const std::string& name, int value);
 	void setUniformMat4(const std::string& name, const glm::mat4& value);
 	void setUniformMat4Array(const std::string& name, const std::vector<glm::mat4>& matrices);
+	void setUniformVec3(const std::string& name, const glm::vec3& value);
 
 private:
 	GLuint m_program{};

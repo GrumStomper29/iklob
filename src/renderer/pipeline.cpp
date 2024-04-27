@@ -77,6 +77,12 @@ void Pipeline::setUniformMat4Array(const std::string& name, const std::vector<gl
 	glUniformMatrix4fv(location, matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
 }
 
+void Pipeline::setUniformVec3(const std::string& name, const glm::vec3& value)
+{
+	GLint location{ glGetUniformLocation(m_program, name.c_str()) };
+	glUniform3fv(location, 1, glm::value_ptr(value));
+}
+
 
 
 void Pipeline::moveFrom(Pipeline&& p)

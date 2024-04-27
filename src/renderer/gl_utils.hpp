@@ -8,4 +8,4 @@ void debugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity
 
 GLuint compileShader(const std::string& filename, GLenum type);
 
-GLuint createTexture(const void* pixels, GLsizei width, GLsizei height, GLint minFilter, GLint magFilter);
+GLuint createTexture(const void* pixels, GLsizei width, GLsizei height, GLint minFilter, GLint magFilter, int bits);

@@ -34,7 +34,7 @@ void main()
 	}
 	else
 	{
-	gl_Position = projection * view /* * model */ * calculateSkinMatrix() * vec4(inPos, 1.0f);
+	gl_Position = projection * view * model * calculateSkinMatrix() * vec4(inPos, 1.0f);
 	}
 
 	mat3 normalTransform = inverse(transpose(mat3(model)));

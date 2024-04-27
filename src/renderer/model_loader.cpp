@@ -79,7 +79,7 @@ Renderer::Material loadPrimitiveMaterial(const tinygltf::Model& model, const tin
 			ret.hasBaseColorTexture = true;
 			ret.baseColorTexture = createTexture(baseColorTextureImage.image.data(),
 				baseColorTextureImage.width, baseColorTextureImage.height,
-				minFilter, magFilter);
+				minFilter, magFilter, baseColorTextureImage.bits);
 		}
 	}
 
